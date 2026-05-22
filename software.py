@@ -42,3 +42,23 @@ with st.sidebar.form(key="panel_parametros"):
 
     # Botón para procesar el formulario
     boton_calcular = st.form_submit_button(label="Calcular Parámetros Operativos")
+    st.markdown(
+        """
+        <style>
+        [data-testid="stSidebar"] button {
+            background-color: #ff4b4b !important;
+            color: white !important;
+            border-radius: 5px !important;
+            border: none !important;
+            width: 100% !important;
+            font-weight: bold !important;
+            height: 3em !important;
+        }
+        [data-testid="stSidebar"] button:hover {
+            background-color: #ff3333 !important;
+            color: white !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
