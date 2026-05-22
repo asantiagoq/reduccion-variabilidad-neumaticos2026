@@ -22,4 +22,4 @@ git clone https://github.com/asantiagoq/reduccion-variabilidad-neumaticos2026
 pip install -r requirements.txt
 
 3. Ejecutar la aplicación web:
-streamlit run app.py
+streamlit run software.py
