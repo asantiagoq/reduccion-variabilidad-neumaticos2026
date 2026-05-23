@@ -62,3 +62,98 @@ with st.sidebar.form(key="panel_parametros"):
         """,
         unsafe_allow_html=True
     )
+# =========================================================================
+# 3. PROCESAMIENTO Y DESPLIEGUE DINÁMICO (CON EFECTO DE RECARGA VISUAL)
+# =========================================================================
+if boton_calcular:
+    
+    # Creamos un contenedor de animación de carga para dar el efecto de recarga
+    with st.spinner("Procesando telemetria y recalculando costos operativos..."):
+        
+        # Parámetros fijos de desgaste basados en las especificaciones
+        profundidad_inicial_mm = 65.0
+        neumaticos_por_camion = 6
+
+        # Alineación de los cálculos analíticos para el Tajo Norte
+        tasa_desgaste_norte = profundidad_inicial_mm / vida_util_norte
+        cph_neumatico_norte = precio_neumatico / vida_util_norte
+        cph_camion_norte = cph_neumatico_norte * neumaticos_por_camion
+
+        # Alineación de los cálculos analíticos para el Tajo Sur
+        tasa_desgaste_sur = profundidad_inicial_mm / vida_util_sur
+        cph_neumatico_sur = precio_neumatico / vida_util_sur
+        cph_camion_sur = cph_neumatico_sur * neumaticos_por_camion
+
+        # Determinación de variaciones porcentuales del impacto operativo
+        variacion_desgaste = ((tasa_desgaste_sur - tasa_desgaste_norte) / tasa_desgaste_norte) * 100
+        variacion_cph = ((cph_camion_sur - cph_camion_norte) / cph_camion_norte) * 100
+
+        # =========================================================================
+        # 4. DESPLIEGUE DE INDICADORES EN PANTALLA PRINCIPAL
+        # =========================================================================
+        st.header("1. Cuantificación del Impacto Geomecánico y Costo por Hora")
+        st.write("Resultados generados a partir de los parámetros activos en el panel de control.")
+
+        # Distribución en columnas para presentación en paralelo
+        col_nort_vista, col_sur_vista, col_var_vista = st.columns(3)
+        
+        with col_nort_vista:
+            st.metric(
+                label="CPH Camión - Tajo Norte", 
+                value=f"${cph_camion_norte:.2f} USD/h", 
+                delta=f"{tasa_desgaste_norte:.5f} mm/h"
+            )
+            
+        with col_sur_vista:
+            st.metric(
+                label="CPH Camión - Tajo Sur", 
+                value=f"${cph_camion_sur:.2f} USD/h", 
+                delta=f"{tasa_desgaste_sur:.5f} mm/h",
+                delta_color="inverse"
+            )
+            
+        with col_var_vista:
+            st.metric(
+                label="Incremento de Costo Operativo", 
+                value=f"+{variacion_cph:.1f}%", 
+                delta="Severidad Geomecánica Alta",
+                delta_color="off"
+            )
+
+        st.markdown("---")
+
+        # Estructuración de la tabla consolidada para el reporte técnico
+        st.subheader("Tabla Resumen de Indicadores Técnicos y Financieros")
+        
+        datos_resumen = {
+            "Métrica Operativa": [
+                "Tasa de Desgaste (mm/h)", 
+                "Costo por Hora por Neumático (USD/h)", 
+                "Costo por Hora por Camión (USD/h)"
+            ],
+            "Tajo Norte": [
+                f"{tasa_desgaste_norte:.5f}", 
+                f"${cph_neumatico_norte:.2f}", 
+                f"${cph_camion_norte:.2f}"
+            ],
+            "Tajo Sur": [
+                f"{tasa_desgaste_sur:.5f}", 
+                f"${cph_neumatico_sur:.2f}", 
+                f"${cph_camion_sur:.2f}"
+            ],
+            "Incremento de Impacto": [
+                f"+{variacion_desgaste:.1f}%", 
+                f"+{variacion_cph:.1f}%", 
+                f"+{variacion_cph:.1f}%"
+            ]
+        }
+
+        df_resumen = pd.DataFrame(datos_resumen)
+        st.table(df_resumen)
+        
+    # Notificación 
+    st.toast("Estrategia técnica y financiera actualizada", icon="✅")
+
+else:
+    # Estado inicial de la aplicación al cargar la sesión
+    st.info("Por favor, configure los parámetros requeridos en la barra lateral y presione el botón 'Calcular Parámetros Operativos' para desplegar el análisis.")
