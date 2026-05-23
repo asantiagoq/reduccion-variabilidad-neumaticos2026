@@ -63,7 +63,7 @@ with st.sidebar.form(key="panel_parametros"):
         unsafe_allow_html=True
     )
 # =========================================================================
-# 3. PROCESAMIENTO Y DESPLIEGUE DINÁMICO (CON EFECTO DE RECARGA VISUAL)
+# 3. PROCESAMIENTO Y DESPLIEGUE DINÁMICO
 # =========================================================================
 if boton_calcular:
     
@@ -151,8 +151,68 @@ if boton_calcular:
         df_resumen = pd.DataFrame(datos_resumen)
         st.table(df_resumen)
         
-    # Notificación 
-    st.toast("Estrategia técnica y financiera actualizada", icon="✅")
+    # =========================================================================
+        # 5. VALIDACION DE CAPACIDAD OPERATIVA Y SANEAMIENTO (PUNTO 2 DEL PDF)
+        # =========================================================================
+        st.header("2. Saneamiento del Modelo de Transporte y Capacidad Operativa")
+        st.write("Evaluación del cumplimiento de metas de producción bajo restricciones de disponibilidad.")
+
+        # Parámetros técnicos de rendimiento para camiones CAT 797F
+        toneladas_por_viaje = 320.0
+        
+        # Rendimiento estimado en viajes por hora según distancia y pendientes
+        viajes_hora_norte = 1.6
+        viajes_hora_sur = 1.8
+
+        # Cálculo matemático del impacto de la disponibilidad mecánica (Restricción del taller)
+        flota_disponible = (flota_total * disponibilidad_mecanica) / 100.0
+        horas_flota_diarias = flota_disponible * horas_efectivas_dia
+
+        # Asignación simulada de la flota disponible (Escenario mixto estándar 50/50)
+        horas_asignadas_norte = horas_flota_diarias * 0.50
+        horas_asignadas_sur = horas_flota_diarias * 0.50
+
+        # Proyección de producción diaria real transportada (Toneladas)
+        produccion_norte_ton = horas_asignadas_norte * viajes_hora_norte * toneladas_por_viaje
+        produccion_sur_ton = horas_asignadas_sur * viajes_hora_sur * toneladas_por_viaje
+        produccion_total_ton = produccion_norte_ton + produccion_sur_ton
+
+        # Meta de producción estipulada para el tajo en Las Bambas (Línea base de control)
+        meta_produccion_bambas = 450000.0
+
+        # Despliegue de métricas de capacidad de transporte
+        col_cap1, col_cap2, col_cap3 = st.columns(3)
+
+        with col_cap1:
+            st.metric(
+                label="Flota Disponible Operativa",
+                value=f"{flota_disponible:.1f} Camiones",
+                delta=f"-{flota_total - flota_disponible:.1f} en Mantenimiento",
+                delta_color="inverse"
+            )
+
+        with col_cap2:
+            st.metric(
+                label="Producción Diaria Proyectada",
+                value=f"{produccion_total_ton:,.0f} Ton",
+                delta=f"{produccion_total_ton - meta_produccion_bambas:,.0f} vs Meta"
+            )
+
+        with col_cap3:
+            # Validación automática del cumplimiento regulatorio del PDF
+            if produccion_total_ton >= meta_produccion_bambas:
+                st.metric(label="Estatus de Capacidad", value="CUMPLE META", delta="Flota Saneada", delta_color="normal")
+            else:
+                st.metric(label="Estatus de Capacidad", value="DEFICIT OPERATIVO", delta="Requiere Optimizacion", delta_color="inverse")
+
+        # Mensaje de diagnóstico de ingeniería
+        if produccion_total_ton < meta_produccion_bambas:
+            st.error(f"DIAGNOSTICO DE CAPACIDAD: Bajo una disponibilidad mecánica del {disponibilidad_mecanica}%, la flota operativa de {flota_disponible:.1f} camiones genera un déficit de {meta_produccion_bambas - produccion_total_ton:,.0f} toneladas métricas diarias respecto a la meta de producción de la mina.")
+        else:
+            st.success(f"DIAGNOSTICO DE CAPACIDAD: El modelo de transporte se encuentra saneado. Con el {disponibilidad_mecanica}% de disponibilidad, la capacidad instalada cubre la meta operativa diaria de {meta_produccion_bambas:,.0f} toneladas.")
+
+    # Notificación
+    st.toast("Estrategia tecnica y financiera actualizada")
 
 else:
     # Estado inicial de la aplicación al cargar la sesión
